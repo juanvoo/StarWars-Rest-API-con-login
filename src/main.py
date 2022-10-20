@@ -11,6 +11,11 @@ from admin import setup_admin
 from models import db, User, People, FavPeople, Planets, FavPlanet
 import json
 #from models import Person
+# import jwt
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -156,6 +161,47 @@ def deletePlanetsFav(position):
     db.session.commit()
     response_body = {"msg":"Planet borrado"}
     return jsonify(response_body), 200
+
+# Create a route to authenticate your users and return JWTs. The
+# create_access_token() function is used to actually generate the JWT.
+@app.route("/login", methods=["POST"])
+def login():
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
+
+    user = User.query.filter_by(email=email).first()
+
+    if user is None:
+        return jsonify({"msg": "user no existe"}), 404
+    
+    if email != user.email or password != user.password:
+        return jsonify({"msg": "Bad email or password"}), 401
+    
+    access_token = create_access_token(identity=email)
+    
+    response_body = {
+        "access_token":access_token, 
+        "user": user.serialize()}   
+
+    return jsonify(response_body), 200
+
+# Protect a route with jwt_required, which will kick out requests
+# without a valid JWT present.
+@app.route("/profile", methods=["GET"])
+@jwt_required()
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    print(current_user)
+    user = User.query.filter_by(email=current_user).first()
+    
+    if user is None:
+        return jsonify({"msg": "user no existe"}), 404
+
+    response_body = { 
+        "user": user.serialize()} 
+
+    return jsonify(response_body), 200     
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
