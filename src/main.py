@@ -42,7 +42,7 @@ def get_User():
         "mensaje": "Todos los Usuarios",
         "users": serializados
     }), 200
-
+# njxbwsx
 # GET para Listar todos los registros de people
 
 @app.route('/people', methods=['GET'])
