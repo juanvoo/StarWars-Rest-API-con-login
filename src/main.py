@@ -190,7 +190,7 @@ def login():
 @app.route("/profile", methods=["GET"])
 @jwt_required()
 def protected():
-    # Access the identity of the current user with get_jwt_identity
+    
     current_user = get_jwt_identity()
     print(current_user)
     user = User.query.filter_by(email=current_user).first()
@@ -201,6 +201,40 @@ def protected():
     response_body = { 
         "user": user.serialize()} 
 
+    return jsonify(response_body), 200
+
+    @app.route("/profile", methods=["GET"])
+    @jwt_required()
+    def protected():
+    
+        current_user = get_jwt_identity()
+    user = User.query.filter_by(email=current_user).first()
+    
+    if user is None:
+        return jsonify({"msg":"User doesn't exist"}), 404
+    
+    response_body = {
+    "user": user.serialize()
+        
+    }
+    return jsonify(response_body), 200
+
+
+@app.route("/valid-token", methods=["GET"])
+@jwt_required()
+def valid_token():
+    
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(email=current_user).first()
+    
+    if user is None:
+        return jsonify({"status":False}), 404
+    
+    response_body = {
+        "status": True,
+        "user": user.serialize()
+        
+    }
     return jsonify(response_body), 200     
 
 # this only runs if `$ python src/main.py` is executed
